@@ -1,0 +1,24 @@
+{
+  "PASTASJOGADORES": {
+    "Config": {
+      "Nome": "Pastas dos jogadores",
+      "Botao": "Escolher pastas",
+      "Dica": "Pastas que os jogadores podem abrir no seletor de arquivos.",
+      "Titulo": "Pastas dos jogadores",
+      "Vazio": "Sem limite de pasta na procura de arquivos.",
+      "Adicionar": "Adicionar pasta",
+      "Remover": "Remover",
+      "VerComoJogador": "Ver como jogador",
+      "FonteInteira": "Todas as pastas"
+    },
+    "ConfiaveisLivres": {
+      "Nome": "Ignorar Jogador confiável",
+      "Dica": "Jogador confiável pode navegar por todas as pastas."
+    },
+    "Aviso": {
+      "Coberta": "{pasta} tem acesso liberado dentro de {por}.",
+      "Invalida": "Pasta não encontrada: {pasta}",
+      "EnvioFora": "Só é possível o envio de arquivos dentro das pastas liberadas."
+    }
+  }
+}

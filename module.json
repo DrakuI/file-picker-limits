@@ -1,0 +1,40 @@
+{
+  "id": "file-picker-limits",
+  "title": "File Picker Limits",
+  "description": "Limits the folders that players can use in the file picker.",
+  "version": "1.0.1",
+  "authors": [
+    {
+      "name": "Drakul",
+      "url": "https://github.com/DrakuI"
+    }
+  ],
+  "url": "https://github.com/DrakuI/file-picker-limits",
+  "manifest": "https://github.com/DrakuI/file-picker-limits/releases/latest/download/module.json",
+  "download": "https://github.com/DrakuI/file-picker-limits/releases/download/v1.0.1/module.zip",
+  "bugs": "https://github.com/DrakuI/file-picker-limits/issues",
+  "readme": "https://github.com/DrakuI/file-picker-limits/blob/main/README.md",
+  "license": "LICENSE",
+  "compatibility": {
+    "minimum": "14",
+    "verified": "14.369"
+  },
+  "esmodules": [
+    "scripts/main.mjs"
+  ],
+  "styles": [
+    "styles/file-picker-limits.css"
+  ],
+  "languages": [
+    {
+      "lang": "pt-BR",
+      "name": "Português (Brasil)",
+      "path": "lang/pt-BR.json"
+    },
+    {
+      "lang": "en",
+      "name": "English",
+      "path": "lang/en.json"
+    }
+  ]
+}

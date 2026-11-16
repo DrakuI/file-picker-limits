@@ -1,0 +1,24 @@
+{
+  "PASTASJOGADORES": {
+    "Config": {
+      "Nome": "Player directory",
+      "Botao": "Choose folders",
+      "Dica": "Folders shown to players in the file picker.",
+      "Titulo": "Player folders",
+      "Vazio": "No file picker limits.",
+      "Adicionar": "Add path",
+      "Remover": "Remove",
+      "VerComoJogador": "Preview",
+      "FonteInteira": "All folders"
+    },
+    "ConfiaveisLivres": {
+      "Nome": "Trusted players without limit",
+      "Dica": "Trusted Players ignore the file picker limits."
+    },
+    "Aviso": {
+      "Coberta": "{pasta} is already allowed inside {por}.",
+      "Invalida": "Path not found: {pasta}",
+      "EnvioFora": "Files can only be uploaded inside the allowed folders."
+    }
+  }
+}
