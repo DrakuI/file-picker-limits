@@ -250,9 +250,12 @@ export function montar({
         private: result.private || result.privateDirs.includes(d)
       })).sort((a, b) => a.name.localeCompare(b.name, game.i18n.lang));
       const files = result.files.map(path => ({ name: decodeURIComponent(path.split("/").pop()), url: path }));
+      const isFolderPicker = this.type === "folder";
       return {
         dirs,
         files,
+        isFolderPicker,
+        selected: isFolderPicker ? this.source.target : this.request,
         canCreateFolder: this.canCreateFolder,
         canUpload: this.canUpload,
         canTogglePrivacy: game.user?.isGM !== false,
@@ -276,6 +279,7 @@ export function montar({
 
   globalThis.CONST = {
     DEFAULT_TOKEN: TOKEN_PADRAO,
+    FILE_PICKER_PUBLIC_DIRS: PUBLICAS,
     USER_ROLES: { NONE: 0, PLAYER: 1, TRUSTED: 2, ASSISTANT: 3, GAMEMASTER: 4 }
   };
   globalThis.CONFIG = { ux: { FilePicker } };

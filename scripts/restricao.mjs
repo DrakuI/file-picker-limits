@@ -7,10 +7,14 @@
  * liberar aqui (efeitos com curinga, artes de token, índices).
  *
  * Pontos de entrada no FilePicker do Foundry 14:
+ *  - FilePicker#_inferSourceAndTarget: chamado pelo construtor com o arquivo atual do campo; um arquivo fora das
+ *    pastas liberadas não decide onde a janela nasce;
  *  - FilePicker#browse: escolhe onde a janela abre e marca as opções da busca;
  *  - FilePicker.browse: nas buscas marcadas, troca a listagem de um caminho fora das pastas liberadas pela lista
  *    dessas pastas;
- *  - FilePicker#_prepareContext: tira os favoritos que apontam para fora das pastas liberadas;
+ *  - FilePicker#_prepareContext: antes de desenhar, troca um resultado de pasta fora das liberadas (venha de onde
+ *    vier) pela lista das pastas liberadas; tira os favoritos de fora e o caminho do arquivo atual quando ele está
+ *    fora;
  *  - FilePicker#canCreateFolder: sem criar pasta nem enviar arquivo fora das pastas liberadas;
  *  - gancho renderFilePicker: barra o envio quando o caminho digitado no campo de endereço sai das pastas.
  *
@@ -107,6 +111,66 @@ function restaurarFontes(seletor) {
 }
 
 /**
+ * Lista das pastas liberadas de uma fonte, no formato do resultado do servidor e marcada como montada pelo módulo.
+ * @param {string} fonte
+ * @param {string} [bucket]
+ * @param {string[]} [extensoes]
+ * @returns {object}
+ */
+function listagemMarcada(fonte, bucket, extensoes) {
+  const listagem = listagemLiberadas(lerPastas(), fonte, bucket, extensoes);
+  Object.defineProperty(listagem, LISTAGEM, { value: true });
+  return listagem;
+}
+
+/**
+ * Fonte, bucket e caminho canônico de um arquivo, deduzidos do endereço como o FilePicker deduz a pasta inicial.
+ * @param {FilePicker} seletor
+ * @param {string} endereco
+ * @returns {{fonte: string, bucket: string, caminho: string|null}|null}  null para endereço vazio ou de outro site,
+ *   que não aponta para pasta nenhuma do servidor.
+ */
+function localDoArquivo(seletor, endereco) {
+  if ((typeof endereco !== "string") || !endereco) return null;
+  const s3 = seletor.constructor.matchS3URL?.(endereco);
+  if (s3?.groups) return { fonte: "s3", bucket: s3.groups.bucket ?? "", caminho: normalizar(s3.groups.key) };
+  if (/^[a-z][a-z0-9+.-]*:/i.test(endereco)) return null;
+  const caminho = normalizar(endereco);
+  const publicas = globalThis.CONST?.FILE_PICKER_PUBLIC_DIRS ?? [];
+  const fonte = publicas.includes(caminho?.split("/")[0]) ? "public" : "data";
+  return { fonte, bucket: "", caminho };
+}
+
+/**
+ * Testa se um arquivo pode aparecer num seletor limitado: está dentro de uma pasta liberada ou não é um arquivo do
+ * servidor.
+ * @param {FilePicker} seletor
+ * @param {string} endereco
+ * @returns {boolean}
+ */
+function arquivoVisivel(seletor, endereco) {
+  const local = localDoArquivo(seletor, endereco);
+  if (!local) return true;
+  return pastaQueContem(lerPastas(), local.fonte, local.bucket, local.caminho) !== null;
+}
+
+/**
+ * Antes de desenhar um seletor limitado, troca um resultado de pasta fora das liberadas pela lista das pastas
+ * liberadas da fonte. Cobre resultados que não passaram pela navegação limitada: de subclasses, de outros módulos
+ * ou de uma busca feita antes de o limite valer.
+ * @param {FilePicker} seletor
+ */
+function conferirResultado(seletor) {
+  ajustarFontes(seletor);
+  const resultado = seletor.result;
+  if (!resultado || resultado[LISTAGEM]) return;
+  if (dentroDasLiberadas(seletor, resultado.target)) return;
+  const fonte = seletor.activeSource;
+  seletor.result = listagemMarcada(fonte, bucketDe(seletor), resultado.extensions ?? seletor.extensions);
+  if (seletor.sources[fonte]) seletor.sources[fonte].target = "";
+}
+
+/**
  * Define a fonte e o caminho da primeira busca de um seletor limitado.
  * @param {FilePicker} seletor
  * @param {string} destino                Caminho em que o seletor abriria.
@@ -125,6 +189,24 @@ function entrar(seletor, destino) {
 /* -------------------------------------------- */
 /*  Substitutos das funções do FilePicker       */
 /* -------------------------------------------- */
+
+/**
+ * FilePicker#_inferSourceAndTarget, chamado pelo construtor com o arquivo atual do campo. Num seletor limitado, a
+ * pasta de um arquivo fora das liberadas é trocada pelo ponto de entrada: a janela já nasce lá, sem guardar a pasta
+ * proibida em lugar nenhum.
+ * @this {FilePicker}
+ * @param {Function} original
+ * @param {string} alvo
+ * @returns {[string, string]}            Fonte e pasta.
+ */
+function inferirOrigem(original, alvo) {
+  const [fonte, caminho] = original.call(this, alvo);
+  if (!limitado(this) || !this.sources) return [fonte, caminho];
+  const bucket = fonte === "s3" ? (this.sources.s3?.bucket ?? "") : "";
+  const ponto = pontoDeEntrada(lerPastas(), Object.keys(this.sources), fonte, bucket, caminho);
+  if ((ponto.fonte === "s3") && ponto.bucket && this.sources.s3) this.sources.s3.bucket = ponto.bucket;
+  return [ponto.fonte, codificar(ponto.caminho)];
+}
 
 /**
  * FilePicker#browse.
@@ -166,9 +248,7 @@ async function buscar(original, fonte, alvo, opcoes) {
   if (pastaQueContem(pastas, fonte, limpas.bucket, caminho)) {
     return original.call(this, fonte, codificar(caminho), limpas);
   }
-  const listagem = listagemLiberadas(pastas, fonte, limpas.bucket, limpas.extensions);
-  Object.defineProperty(listagem, LISTAGEM, { value: true });
-  return listagem;
+  return listagemMarcada(fonte, limpas.bucket, limpas.extensions);
 }
 
 /**
@@ -179,8 +259,11 @@ async function buscar(original, fonte, alvo, opcoes) {
  * @returns {Promise<object>}
  */
 async function prepararContexto(original, opcoes) {
+  const limite = limitado(this);
+  if (limite) conferirResultado(this);
   const contexto = await original.call(this, opcoes);
-  if (!contexto || !limitado(this)) return contexto;
+  if (!contexto || !limite) return contexto;
+  if (!contexto.isFolderPicker && contexto.selected && !arquivoVisivel(this, this.request)) contexto.selected = "";
   if (contexto.favorites && (typeof contexto.favorites === "object")) {
     const pastas = lerPastas();
     const bucket = bucketDe(this);
@@ -317,6 +400,7 @@ export function instalar() {
   const proto = FilePicker.prototype;
   const original = {
     buscar: FilePicker.browse,
+    inferirOrigem: proto._inferSourceAndTarget,
     navegar: proto.browse,
     prepararContexto: proto._prepareContext,
     podeCriarPasta: Object.getOwnPropertyDescriptor(proto, "canCreateFolder")
@@ -324,6 +408,11 @@ export function instalar() {
   FilePicker.browse = function browse(fonte, alvo, opcoes) {
     return buscar.call(this, original.buscar, fonte, alvo, opcoes);
   };
+  if (typeof original.inferirOrigem === "function") {
+    proto._inferSourceAndTarget = function _inferSourceAndTarget(alvo) {
+      return inferirOrigem.call(this, original.inferirOrigem, alvo);
+    };
+  }
   proto.browse = function browse(alvo, opcoes) {
     return navegar.call(this, original.navegar, alvo, opcoes);
   };
@@ -349,6 +438,7 @@ export function desinstalar() {
   if (!instalado) return;
   const { FilePicker, original, gancho } = instalado;
   FilePicker.browse = original.buscar;
+  if (typeof original.inferirOrigem === "function") FilePicker.prototype._inferSourceAndTarget = original.inferirOrigem;
   FilePicker.prototype.browse = original.navegar;
   FilePicker.prototype._prepareContext = original.prepararContexto;
   if (original.podeCriarPasta) {

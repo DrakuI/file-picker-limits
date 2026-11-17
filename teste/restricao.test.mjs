@@ -157,11 +157,97 @@ test("fontes: some a aba sem pasta liberada e a janela abre em uma fonte que tem
   const seletor = new FilePicker({ current: "icons/svg/mystery-man.svg" });
   assert.equal(seletor.activeSource, "data");
   const outro = new FilePicker({ current: "icons/weapons/sword.webp" });
-  assert.equal(outro.activeSource, "public");
+  assert.equal(outro.activeSource, "data");
+  assert.equal(outro.target, "jogadores");
   await outro.render();
   assert.deepEqual(outro.tabs, ["data"]);
   assert.equal(outro.activeSource, "data");
   assert.equal(outro.target, "jogadores");
+});
+
+test("arquivo atual fora das liberadas: a janela já nasce no ponto de entrada", async () => {
+  const uma = cena({ pastas: [pasta("jogadores")] });
+  const seletor = new uma.FilePicker({ current: "worlds/mesa/npcs/vilao.png" });
+  assert.equal(seletor.activeSource, "data");
+  assert.equal(seletor.target, "jogadores");
+  assert.deepEqual(Object.values(seletor.sources).map(s => s.target), ["jogadores", ""]);
+  await seletor.render();
+  assert.deepEqual(uma.servidor.alvos, ["data:jogadores"]);
+  desinstalar();
+
+  const duas = cena({ pastas: [pasta("jogadores"), pasta("coleção/Icons")] });
+  const lista = new duas.FilePicker({ current: "worlds/mesa/npcs/vilao.png" });
+  assert.equal(lista.target, "");
+  await lista.render();
+  assert.deepEqual(lista.context.dirs.map(d => d.path), ["cole%C3%A7%C3%A3o/Icons", "jogadores"]);
+  assert.deepEqual(lista.context.files, []);
+  assert.deepEqual(duas.servidor.alvos, []);
+});
+
+test("arquivo atual dentro das liberadas: a janela nasce na pasta dele", async () => {
+  const { FilePicker } = cena({ pastas: [pasta("coleção/Icons")] });
+  const seletor = new FilePicker({ current: "coleção/Icons/Baldurs Gate/espada.webp" });
+  assert.equal(seletor.target, "cole%C3%A7%C3%A3o/Icons/Baldurs%20Gate");
+  await seletor.render();
+  assert.deepEqual(seletor.context.files.map(f => f.name), ["espada.webp"]);
+  assert.equal(seletor.context.selected, "coleção/Icons/Baldurs Gate/espada.webp");
+});
+
+test("resultado de pasta proibida que não veio da navegação limitada não é desenhado", async () => {
+  const { FilePicker, servidor } = cena({ pastas: [pasta("jogadores"), pasta("coleção/Icons")] });
+  const seletor = new FilePicker({});
+  await seletor.render();
+  seletor.result = await FilePicker.browse("data", "worlds/mesa/npcs");
+  seletor.source.target = seletor.result.target;
+  assert.deepEqual(seletor.result.files, ["worlds/mesa/npcs/vilao.png"]);
+  await seletor.render();
+  assert.equal(seletor.target, "");
+  assert.deepEqual(seletor.context.dirs.map(d => d.path), ["cole%C3%A7%C3%A3o/Icons", "jogadores"]);
+  assert.deepEqual(seletor.context.files, []);
+  assert.equal(seletor.context.target, "");
+  assert.deepEqual(servidor.alvos, ["data:worlds/mesa/npcs"]);
+});
+
+test("resultado de pasta liberada vindo de outro caminho continua", async () => {
+  const { FilePicker } = cena({ pastas: [pasta("jogadores")] });
+  const seletor = new FilePicker({});
+  await seletor.render();
+  seletor.result = await FilePicker.browse("data", "jogadores/tokens");
+  seletor.source.target = seletor.result.target;
+  await seletor.render();
+  assert.equal(seletor.target, "jogadores/tokens");
+  assert.deepEqual(seletor.context.files.map(f => f.name), ["anao.webp", "elfa.webp"]);
+});
+
+test("Selected: o caminho do arquivo atual só aparece se estiver numa pasta liberada", async () => {
+  const { FilePicker } = cena({ pastas: [pasta("jogadores"), pasta("icons", "public")] });
+  const fora = new FilePicker({ current: "worlds/mesa/npcs/vilao.png" });
+  await fora.render();
+  assert.equal(fora.context.selected, "");
+  assert.equal(fora.request, "worlds/mesa/npcs/vilao.png");
+  const codificado = new FilePicker({ current: "worlds/mesa/../mesa/npcs/vil%C3%A3o.png" });
+  await codificado.render();
+  assert.equal(codificado.context.selected, "");
+  const dentro = new FilePicker({ current: "jogadores/tokens/elfa.webp" });
+  await dentro.render();
+  assert.equal(dentro.context.selected, "jogadores/tokens/elfa.webp");
+  const publico = new FilePicker({ current: "icons/weapons/sword.webp" });
+  await publico.render();
+  assert.equal(publico.context.selected, "icons/weapons/sword.webp");
+  const externo = new FilePicker({ current: "https://exemplo.com/arte.png" });
+  await externo.render();
+  assert.equal(externo.context.selected, "https://exemplo.com/arte.png");
+  const pasta_ = new FilePicker({ type: "folder", current: "worlds/mesa/npcs" });
+  await pasta_.render();
+  assert.equal(pasta_.context.selected, "jogadores");
+});
+
+test("Selected: o mestre continua vendo o caminho do arquivo atual", async () => {
+  const { FilePicker } = cena({ papel: 4, pastas: [pasta("jogadores")] });
+  const seletor = new FilePicker({ current: "worlds/mesa/npcs/vilao.png" });
+  assert.equal(seletor.target, "worlds/mesa/npcs");
+  await seletor.render();
+  assert.equal(seletor.context.selected, "worlds/mesa/npcs/vilao.png");
 });
 
 test("fontes: com pasta nas duas, as duas abas ficam e cada uma lista as suas", async () => {
