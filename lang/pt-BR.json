@@ -16,7 +16,7 @@
       "Dica": "Jogador confiável pode navegar por todas as pastas."
     },
     "Aviso": {
-      "Coberta": "{pasta} tem acesso liberado dentro de {por}.",
+      "Coberta": "{pasta} já tem acesso liberado dentro de {por}.",
       "Invalida": "Pasta não encontrada: {pasta}",
       "EnvioFora": "Só é possível o envio de arquivos dentro das pastas liberadas."
     }
