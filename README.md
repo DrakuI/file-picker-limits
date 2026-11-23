@@ -1,7 +1,7 @@
 [![Downloads](https://img.shields.io/github/downloads/DrakuI/file-picker-limits/total?label=downloads&style=for-the-badge)](https://github.com/DrakuI/file-picker-limits/releases)
 [![Foundry Version](https://img.shields.io/badge/dynamic/json?label=Foundry&query=%24.compatibility.verified&url=https%3A%2F%2Fgithub.com%2FDrakuI%2Ffile-picker-limits%2Freleases%2Flatest%2Fdownload%2Fmodule.json&color=orange&style=for-the-badge)](https://foundryvtt.com/packages/file-picker-limits)
 [![Patreon](https://img.shields.io/badge/Patreon-F96854?logo=patreon&logoColor=white&style=for-the-badge)](https://patreon.com/noiterpg?utm_medium=unknown&utm_source=join_link&utm_campaign=creatorshare_creator&utm_content=copyLink)
-[![Discord](https://img.shields.io/badge/Discord-5865F2?logo=discord&logoColor=white&style=for-the-badge)](https://discord.gg/SEU_CONVITE)
+[![Discord](https://img.shields.io/badge/Discord-5865F2?logo=discord&logoColor=white&style=for-the-badge)](https://discord.gg/RNTmfrcmUC)
 
 # File Picker Limits
 
