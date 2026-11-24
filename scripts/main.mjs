@@ -2,6 +2,7 @@
  * File Picker Limits: limita o seletor de arquivos dos jogadores às pastas escolhidas pelo mestre.
  */
 
+import { atalhosNasConfiguracoes } from "./apoio.mjs";
 import { CONFIGURACOES, ID } from "./constantes.mjs";
 import { ConfigPastas } from "./config.mjs";
 import { adicionarPasta, lerPastas, removerPasta, usuarioLimitado } from "./pastas.mjs";
@@ -72,3 +73,4 @@ export function iniciar() {
 }
 
 Hooks.once("init", iniciar);
+Hooks.on("renderSettingsConfig", atalhosNasConfiguracoes);

@@ -48,3 +48,52 @@
   padding: 12px 0;
   text-align: center;
 }
+
+/* Título que o módulo dá à própria seção de Configurar Opções quando ela não tem um. */
+.file-picker-limits-titulo {
+  display: flex;
+  align-items: center;
+}
+
+/* Atalhos para as páginas do autor, ao lado do título do módulo em Configurar Opções. Cores derivadas da cor do
+   texto, para acompanhar qualquer tema. */
+.file-picker-limits-paginas {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-left: 0.6rem;
+  vertical-align: middle;
+}
+
+.file-picker-limits-pagina {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 1px solid color-mix(in srgb, currentColor 30%, transparent);
+  border-radius: 50%;
+  color: inherit;
+  font-size: 0.75rem;
+  line-height: 1;
+  text-decoration: none;
+  text-shadow: none;
+  opacity: 0.85;
+}
+
+.file-picker-limits-pagina:hover {
+  color: #fff;
+  text-shadow: none;
+  opacity: 1;
+}
+
+.file-picker-limits-pagina-patreon:hover {
+  border-color: #f96854;
+  background: #f96854;
+}
+
+.file-picker-limits-pagina-discord:hover {
+  border-color: #5865f2;
+  background: #5865f2;
+}
